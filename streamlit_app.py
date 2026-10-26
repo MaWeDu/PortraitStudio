@@ -8,6 +8,32 @@ from portrait_core import (QUESTIONS, GUARD, build_prompt, export_prompt, finger
 
 st.set_page_config(page_title='Portrait Studio', page_icon='📷', layout='centered')
 
+st.markdown("""<style>
+.stApp {background: radial-gradient(ellipse at 80% 0%, #24212a 0%, #101318 47%); color:#ece7df;}
+.block-container {max-width:980px; padding-top:2.8rem; padding-bottom:4rem;}
+h1,h2,h3 {color:#e3c48b !important; letter-spacing:-.025em;}
+h3 {font-size:1.32rem !important; line-height:1.45 !important;}
+.stTextInput label,.stSelectbox label,.stTextArea label {color:#c8cad1 !important;}
+[data-testid="stVerticalBlockBorderWrapper"] {border-color:#34313a !important; border-radius:18px !important; background:rgba(24,28,36,.65);}
+[data-testid="stVerticalBlockBorderWrapper"] > div {padding:1.25rem;}
+.stButton button,.stDownloadButton button {border-radius:10px; min-height:2.75rem;}
+.stButton button[kind="primary"],.stDownloadButton button {background:#d6b57a; color:#101318; border-color:#d6b57a; font-weight:700;}
+.stButton button[kind="primary"]:hover,.stDownloadButton button:hover {background:#e8ca95; color:#101318; border-color:#e8ca95;}
+.stTextInput input,.stTextArea textarea {border-radius:10px;}
+.stSelectbox [role="combobox"] {border-radius:10px;}
+.ps-brand {font-size:.73rem; font-weight:700; letter-spacing:.26em; color:#d6b57a; margin-bottom:1.3rem;}
+.ps-hero {padding:2.4rem 2.6rem; margin-bottom:1.3rem; border:1px solid #4d4232; border-radius:22px; background:linear-gradient(125deg,#26252a,#151a22 75%); position:relative; overflow:hidden;}
+.ps-hero:after {content:""; position:absolute; height:180px; width:180px; border:1px solid #806f4f; border-radius:50%; top:-80px; right:-60px; opacity:.4; pointer-events:none;}
+.ps-hero h1 {font-family:Georgia,serif; font-size:3.2rem !important; font-weight:400; line-height:1.08; margin:0 0 1rem; max-width:700px;}
+.ps-hero p {color:#c9c9cf; font-size:1.05rem; line-height:1.7; max-width:650px; margin-bottom:1.1rem;}
+.ps-badges {display:flex; gap:.55rem; flex-wrap:wrap;}
+.ps-badges span {color:#d9c7a5; border:1px solid #554a39; border-radius:30px; padding:.35rem .75rem; font-size:.72rem; letter-spacing:.04em;}
+.ps-process {display:flex; gap:1rem; flex-wrap:wrap; color:#b8bac3; margin:1.7rem 0 1rem; font-size:.86rem;}
+.ps-process b {color:#d6b57a; margin-right:.35rem;}
+@media(max-width:640px) {.block-container {padding-top:1.3rem;} .ps-hero {padding:1.6rem 1.3rem;} .ps-hero h1 {font-size:2.35rem !important;} h3 {font-size:1.15rem !important;}}
+</style>""", unsafe_allow_html=True)
+
+
 
 def revoke():
     st.session_state.pop('approved_digest', None)
@@ -74,9 +100,15 @@ if st.session_state.get('clear_password'):
     st.session_state.pop('password_entry', None)
 authenticate()
 
-st.title('📷 Portrait Studio')
-st.write('Dein Bewerbungs- und LinkedIn-Porträt in 11 Fragen vorbereiten.')
-st.info('Diese App erstellt ausschließlich Text. Sie erzeugt keine Bilder und hat keine Verbindung zu einem Bild-KI-Dienst.')
+st.markdown("""<section class="ps-hero">
+<div class="ps-brand">PORTRAIT STUDIO · PROFESSIONAL HEADSHOTS</div>
+<h1>Professionelle Porträts.<br>Deine Identität.</h1>
+<p>Dein nächster Karriereschritt beginnt mit einem authentischen Auftritt.
+Gestalte deinen persönlichen Bildprompt für Bewerbungs- und LinkedIn-Fotos – in elf klaren Fragen.</p>
+<div class="ps-badges"><span>11 FRAGEN</span><span>DEINE IDENTITÄT IM FOKUS</span><span>DU GIBST DEN TEXT FREI</span></div>
+</section>""", unsafe_allow_html=True)
+st.caption('Hier entsteht ausschließlich dein Bildprompt. Die Bilderzeugung erfolgt später separat und nur mit deiner ausdrücklichen Zustimmung.')
+st.markdown('<div class="ps-process"><span><b>01</b> Wünsche festlegen</span><span><b>02</b> Prompt prüfen</span><span><b>03</b> Export freigeben</span></div>', unsafe_allow_html=True)
 st.button('Sitzungsdaten löschen und abmelden', on_click=clear_session)
 with st.expander('Datenschutz: Was passiert mit deinen Angaben?'):
     st.write('Deine Texte werden zur Verarbeitung an den Streamlit-Server übertragen und im Sitzungsspeicher gehalten. Diese App schreibt sie nicht in Dateien, Datenbanken oder eigene Protokolle. Ein Foto-Upload ist bewusst nicht enthalten. Namen, Kontaktdaten oder andere vertrauliche Angaben sind für den Prompt nicht nötig.')
@@ -86,20 +118,21 @@ with st.expander('Datenschutz: Was passiert mit deinen Angaben?'):
 
 answers = {}
 for key, label, options in QUESTIONS:
-    st.subheader(label)
-    if options:
-        answers[key] = st.selectbox('Auswahl', options, key='q_' + key, on_change=config_changed)
-        answers[key + '_detail'] = st.text_input('Details (bei eigener Vorgabe erforderlich)', key='q_' + key + '_detail', max_chars=400, on_change=config_changed)
-    else:
-        help_text = ('Zum Beispiel: Data Analyst im Gesundheitswesen; keine Arbeitgebernamen nötig.' if key == 'context'
-                     else 'Zum Beispiel: Brille und Sommersprossen erhalten. Alter und Gesichtsmerkmale bleiben grundsätzlich erhalten.')
-        answers[key] = st.text_input('Deine Angaben (optional)', help=help_text, key='q_' + key, max_chars=400, on_change=config_changed)
-    if key == 'context':
-        answers['market'] = st.text_input('Bewerbungsmarkt (optional)', key='q_market', max_chars=100, on_change=config_changed)
-    if key == 'composition':
-        answers['gaze'] = st.selectbox('Blickrichtung', ['Direkt in die Kamera', 'Leicht versetzt', 'Dezent seitlich'], key='q_gaze', on_change=config_changed)
-    if key == 'variants':
-        answers['formats'] = st.selectbox('Ausgabeformate', ['4:5 und 1:1', '4:5', '3:4', '1:1'], key='q_formats', on_change=config_changed)
+    with st.container(border=True):
+        st.subheader(label)
+        if options:
+            answers[key] = st.selectbox('Auswahl', options, key='q_' + key, on_change=config_changed)
+            answers[key + '_detail'] = st.text_input('Details (bei eigener Vorgabe erforderlich)', key='q_' + key + '_detail', max_chars=400, on_change=config_changed)
+        else:
+            help_text = ('Zum Beispiel: Data Analyst im Gesundheitswesen; keine Arbeitgebernamen nötig.' if key == 'context'
+                         else 'Zum Beispiel: Brille und Sommersprossen erhalten. Alter und Gesichtsmerkmale bleiben grundsätzlich erhalten.')
+            answers[key] = st.text_input('Deine Angaben (optional)', help=help_text, key='q_' + key, max_chars=400, on_change=config_changed)
+        if key == 'context':
+            answers['market'] = st.text_input('Bewerbungsmarkt (optional)', key='q_market', max_chars=100, on_change=config_changed)
+        if key == 'composition':
+            answers['gaze'] = st.selectbox('Blickrichtung', ['Direkt in die Kamera', 'Leicht versetzt', 'Dezent seitlich'], key='q_gaze', on_change=config_changed)
+        if key == 'variants':
+            answers['formats'] = st.selectbox('Ausgabeformate', ['4:5 und 1:1', '4:5', '3:4', '1:1'], key='q_formats', on_change=config_changed)
 answers['notes'] = st.text_area('Weitere Wünsche (optional)', key='q_notes', max_chars=1200, on_change=config_changed)
 
 if st.button('Prompt-Vorschau erstellen', type='primary'):
