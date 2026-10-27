@@ -3,6 +3,7 @@ import os
 from portrait_visual import REFERENCE_IMAGE
 from camera_section import render_camera
 from job_presets import JOB_PRESETS, preset_answers, option_label
+from handoff_section import render_handoff
 import time
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
@@ -220,6 +221,7 @@ with st.container(key='studio_shell'):
             st.caption('Zum Kopieren kannst du den vollständigen Exporttext aufklappen. Der feste Freigabehinweis wird immer mit exportiert.')
             with st.expander('Vollständigen Exporttext kopieren'):
                 st.code(full_prompt, language=None)
+            render_handoff(full_prompt)
 
     st.divider()
     st.caption('Portrait Studio · Textvorbereitung · Keine integrierte Bilderzeugung')
