@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+:root{color-scheme:dark;font-family:Arial,sans-serif;color:#eee5d5;background:#101318}*{box-sizing:border-box}body{margin:0;padding:12px}h2{font-size:22px;margin:0 0 10px}p,li{font-size:14px;line-height:1.5;color:#cbd0d8}button,select{font:inherit;border:1px solid #535966;border-radius:10px;padding:10px 13px;background:#242a33;color:#f4eee4;cursor:pointer;min-height:44px}button.primary{background:#d9b677;color:#101318;font-weight:700}button:disabled{opacity:.45;cursor:default}a{color:#e7c78f}label{font-size:14px;line-height:1.5}input{accent-color:#d9b677}input[type=checkbox]{width:18px;height:18px;vertical-align:middle}.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0}.row label{flex:1}.tips,.privacy,.guide-note{border:1px solid #3e444e;background:#20252d;border-radius:12px;padding:12px;margin:12px 0}.tips ul{padding-left:18px;margin:5px 0}.privacy{border-color:#6b5c42}.stage{position:relative;aspect-ratio:4/3;max-height:480px;background:#191f27;border:1px solid #555e69;border-radius:14px;overflow:hidden}video{width:100%;height:100%;object-fit:contain;display:block}video.mirrored{transform:scaleX(-1)}.stage .oval{position:absolute;left:31%;top:11%;width:38%;height:70%;border:2px dashed #e2bd77;border-radius:48%;pointer-events:none;opacity:.75}.stage .eyes{position:absolute;left:28%;right:28%;top:36%;border-top:1px dashed #e2bd77;pointer-events:none}.stage .shoulders{position:absolute;left:20%;right:20%;top:85%;height:30%;border:2px dashed #e2bd77;border-radius:50% 50% 0 0;pointer-events:none;opacity:.6}.stage .placeholder{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:16px;color:#c9cbd1;pointer-events:none}.stage .placeholder span{background:#111820da;padding:8px;border-radius:8px}.stage.active .placeholder{display:none}.stage .countdown{position:absolute;inset:0;display:none;place-items:center;font-size:80px;font-weight:700;color:white;text-shadow:0 2px 20px black;pointer-events:none}.stage.counting .countdown{display:grid}.legend{font-size:12px;color:#bfc4ce;margin:8px 0}.status{font-size:14px;line-height:1.5;min-height:23px;color:#e6c889}.photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.photo{padding:10px;background:#242a33;border-radius:12px}.photo img{width:100%;height:160px;object-fit:contain;display:block;background:#121820;border-radius:8px}.photo p{font-size:12px;margin:7px 0}.photo .row{margin:5px 0}.photo button{font-size:12px;padding:8px}.photo a{font-size:13px}.small{font-size:12px;color:#b6bdc8}.finish{border-top:1px solid #454c57;margin-top:18px;padding-top:12px}.pose-hint{color:#e7c992;margin:8px 0}summary{cursor:pointer;font-weight:700}details{margin:12px 0}button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #f5d58f;outline-offset:2px}@media(max-width:400px){body{padding:6px}.row button{flex:1}.photo img{height:110px}.photo .row{display:block}.stage .oval{width:44%;left:28%}}
+</style></head><body>
+<h2>Deine Referenzfotos aufnehmen</h2>
+<div class="privacy"><strong>Nur in diesem Browser</strong><p>Die Kamera startet erst nach deinem Klick und der Browserfreigabe. Ton bleibt aus. Diese Aufnahmefunktion lädt keine Fotos zum Streamlit-Server oder zu einem KI-Dienst hoch. Fotos bleiben im Arbeitsspeicher dieser Kameraansicht, bis du sie herunterlädst oder löschst.</p><label><input id="consent" type="checkbox"> Ich möchte meine Kamera verwenden und habe die nötigen Rechte und Einwilligungen für die Aufnahmen.</label></div>
+<div class="tips"><strong>So gelingen geeignete Referenzfotos</strong><ul><li>Stelle die Kamera auf Augenhöhe, möglichst 80–120 cm entfernt. Lass bei Bedarf jemanden auslösen.</li><li>Weiches Tageslicht von vorn oder leicht seitlich: zum Beispiel ein Fenster hinter der Kamera. Kein helles Fenster hinter dir, keine direkte Mittagssonne.</li><li>Kopf vollständig im Oval, Augen ungefähr auf der Linie. Lass etwas Platz über dem Haar und zeige die Schultern.</li><li>Keine Beautyfilter, kein digitaler Zoom. Linse reinigen und neutralen Hintergrund wählen.</li></ul><p class="small">Rahmen und Tipps sind Orientierungshilfen. Es gibt keine Gesichtserkennung und keine automatische Prüfung von Licht, Schärfe oder Identität.</p></div>
+<div class="row"><label for="pose">Aufnahmerichtung</label><select id="pose"><option value="frontal">1 · Frontal</option><option value="links">2 · Leicht nach links</option><option value="rechts">3 · Leicht nach rechts</option></select></div>
+<p id="poseHint" class="pose-hint"></p>
+<div class="row"><label for="facing">Kamera</label><select id="facing"><option value="user">Frontkamera / Webcam</option><option value="environment">Rückkamera (falls verfügbar)</option></select></div>
+<div class="row"><button id="start" class="primary" disabled>Kamera starten</button><button id="stop" disabled>Kamera ausschalten</button></div>
+<div class="stage" id="stage"><video id="video" class="mirrored" autoplay muted playsinline aria-label="Live-Kameravorschau"></video><div class="oval" aria-hidden="true"></div><div class="eyes" aria-hidden="true"></div><div class="shoulders" aria-hidden="true"></div><div class="placeholder"><span>Gesichtsrahmen · Kamera noch ausgeschaltet</span></div><div id="countdown" class="countdown" role="timer" aria-live="assertive"></div></div>
+<p class="legend">Oval: Kopf · Querlinie: Augen · Unterer Bogen: Schultern. Der Rahmen wird nicht in das Foto aufgenommen.</p>
+<div class="row"><label><input id="mirror" type="checkbox" checked> Vorschau spiegeln</label><label><input id="timer" type="checkbox" checked> 3-Sekunden-Selbstauslöser</label></div>
+<p class="small">Gespeicherte Fotos sind ungespiegelt, ohne Rahmen und ohne Text. Die Kameraauflösung wird angefragt; die tatsächlich verfügbare Auflösung hängt von Gerät und Browser ab.</p>
+<div class="row"><button id="capture" class="primary" disabled>Foto aufnehmen</button><span id="photoCount" class="small">0 von 5 Aufnahmen</span></div>
+<p id="status" class="status" role="status" aria-live="polite">Erlaube zuerst die Kameranutzung, um zu beginnen.</p>
+<div id="photos" class="photos" aria-label="Aufgenommene Fotos"></div>
+<div class="row"><button id="zip" disabled>Alle Fotos als ZIP herunterladen</button><button id="clear" disabled>Alle Aufnahmen löschen</button></div>
+<div class="finish"><strong>In ChatGPT oder einer anderen KI verwenden</strong><ol><li>Fotos hier prüfen: scharf, gleichmäßig belichtet, beide Augen gut erkennbar.</li><li>Fotos einzeln als JPG oder gemeinsam als ZIP herunterladen. ZIP vor dem Hochladen entpacken.</li><li>Den Bildprompt in Portrait Studio vorbereiten und zum TXT-Export freigeben.</li><li>Im gewählten KI-Chat die JPG-Dateien selbst anhängen und den Prompt einfügen. Erst dort eine ausdrückliche Freigabe zur Bilderzeugung geben.</li></ol><p class="small">Keine automatische Übertragung. Es gelten die Datenschutzregeln des von dir gewählten Dienstes. Nicht alle Dienste unterstützen Referenzfotos.</p><p class="small">Vor dem Schließen dieses Bereichs, Abmelden oder Neuladen bitte Downloads sichern. Die Kamera wird bei Verlassen des Tabs und nach zehn Minuten ausgeschaltet. Aufnahmen bleiben bis zum Löschen oder Schließen der Kameraansicht im Browser; heruntergeladene Dateien werden nicht gelöscht.</p></div>
+<script>/*__CAMERA_UTILS__*/</script>
+<script>
+(() => {
+  'use strict';
+  const { POSES, makeZip, fitSize, photoName } = PortraitCapture;
+  const $ = id => document.getElementById(id);
+  const video = $('video'), stage = $('stage');
+  let stream = null, photos = [], serial = 0, generation = 0, busy = false, starting = false, idleTimer;
+  function status(text) { $('status').textContent = text; }
+  function controls() {
+    $('start').disabled = !$('consent').checked || !!stream || starting;
+    $('stop').disabled = !stream && !starting;
+    $('capture').disabled = !stream || !video.videoWidth || busy || photos.length >= 5;
+    $('zip').disabled = !photos.length || busy;
+    $('clear').disabled = !photos.length || busy;
+    $('pose').disabled = busy; $('facing').disabled = busy;
+    $('photoCount').textContent = `${photos.length} von 5 Aufnahmen`;
+  }
+  function stopCamera(message) {
+    generation++; starting = false; busy = false; clearTimeout(idleTimer);
+    if (stream) stream.getTracks().forEach(track => track.stop());
+    stream = null; video.srcObject = null; stage.classList.remove('active', 'counting');
+    $('countdown').textContent = ''; controls();
+    if (message) status(message);
+  }
+  async function startCamera() {
+    if (!$('consent').checked || stream || starting) return;
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) {
+      status('Dieser Browser erlaubt hier keinen Kamerazugriff. Öffne die App direkt über HTTPS in einem aktuellen Browser; vermeide eingebettete Messenger-Browser.'); return;
+    }
+    starting = true; const request = ++generation; controls(); status('Bitte erlaube den Kamerazugriff im Browser.');
+    try {
+      const next = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: $('facing').value }, width: { ideal: 1920 }, height: { ideal: 1080 } } });
+      if (request !== generation || !$('consent').checked || document.hidden) { next.getTracks().forEach(t => t.stop()); return; }
+      stream = next; starting = false; video.srcObject = stream;
+      stream.getVideoTracks().forEach(t => t.addEventListener('ended', () => stopCamera('Die Kameraverbindung wurde beendet. Du kannst sie erneut starten.')));
+      await video.play();
+      if (request !== generation || !stream) return;
+      stage.classList.add('active');
+      idleTimer = setTimeout(() => stopCamera('Kamera nach zehn Minuten ausgeschaltet. Deine Aufnahmen sind noch da.'), 10 * 60 * 1000);
+      status('Kamera bereit. Richte Kopf und Augen am Rahmen aus und prüfe das Licht.'); controls();
+    } catch (error) {
+      if (request !== generation) return;
+      stopCamera();
+      const messages = { NotAllowedError: 'Kamerazugriff nicht erlaubt. Prüfe die Kamera-Berechtigung dieser Website im Browser und starte erneut.', NotFoundError: 'Keine Kamera gefunden. Schließe eine Kamera an oder nutze dein Smartphone.', NotReadableError: 'Die Kamera ist möglicherweise von einer anderen App belegt. Schließe diese und versuche es erneut.', OverconstrainedError: 'Diese Kamera unterstützt die gewünschte Einstellung nicht. Wähle eine andere Kamera.' };
+      status(messages[error.name] || 'Die Kamera konnte nicht gestartet werden. Prüfe Kamera und Browserberechtigungen.');
+    } finally { if (request === generation) { starting = false; controls(); } }
+  }
+  video.addEventListener('loadedmetadata', () => { if (video.videoWidth) stage.style.aspectRatio = `${video.videoWidth} / ${video.videoHeight}`; controls(); });
+  video.addEventListener('canplay', controls);
+  function drawCapture() {
+    const size = fitSize(video.videoWidth, video.videoHeight);
+    const canvas = document.createElement('canvas'); canvas.width = size.width; canvas.height = size.height;
+    canvas.getContext('2d').drawImage(video, 0, 0, size.width, size.height);
+    return new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve({ blob, ...size }) : reject(new Error('Foto konnte nicht erstellt werden')), 'image/jpeg', .94));
+  }
+  function renderPhotos() {
+    $('photos').replaceChildren();
+    photos.forEach(photo => {
+      const card = document.createElement('article'); card.className = 'photo';
+      const img = document.createElement('img'); img.src = photo.url; img.alt = `Aufnahme: ${photo.label}`;
+      const text = document.createElement('p'); text.textContent = `${photo.label} · ${photo.width} × ${photo.height} px`;
+      const row = document.createElement('div'); row.className = 'row';
+      const download = document.createElement('a'); download.href = photo.url; download.download = photo.name; download.textContent = 'JPG herunterladen';
+      const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Löschen'; remove.setAttribute('aria-label', `${photo.name} löschen`);
+      remove.onclick = () => { photos = photos.filter(p => p !== photo); URL.revokeObjectURL(photo.url); renderPhotos(); controls(); status('Aufnahme aus dieser Browseransicht entfernt. Downloads bleiben auf deinem Gerät.'); };
+      row.append(download, remove); card.append(img, text, row); $('photos').append(card);
+    }); controls();
+  }
+  $('capture').onclick = async () => {
+    if (!stream || busy || photos.length >= 5 || !video.videoWidth) return;
+    busy = true; controls(); const request = generation; const pose = $('pose').value;
+    try {
+      if ($('timer').checked) {
+        stage.classList.add('counting');
+        for (let n = 3; n > 0; n--) { if (request !== generation) return; $('countdown').textContent = String(n); await new Promise(r => setTimeout(r, 1000)); }
+      }
+      stage.classList.remove('counting'); if (request !== generation || !stream) return;
+      const result = await drawCapture(); if (request !== generation) return;
+      const photo = { ...result, name: photoName(pose, ++serial), label: POSES[pose].label, url: URL.createObjectURL(result.blob) };
+      photos.push(photo); renderPhotos();
+      status(photos.length >= 5 ? 'Fünf Aufnahmen erreicht. Lade sie herunter oder lösche einzelne Fotos.' : 'Foto aufgenommen. Prüfe Schärfe und Belichtung in der Vorschau; ergänze bei Bedarf einen anderen Winkel.');
+    } catch (error) { status('Foto konnte nicht aufgenommen werden. Prüfe, ob die Kamera noch aktiv ist.'); }
+    finally { stage.classList.remove('counting'); busy = false; controls(); }
+  };
+  $('zip').onclick = async () => {
+    if (!photos.length || busy) return;
+    busy = true; controls();
+    try {
+      const snapshot = photos.slice();
+      const files = await Promise.all(snapshot.map(async p => ({ name: p.name, data: new Uint8Array(await p.blob.arrayBuffer()) })));
+      files.push({ name: 'HINWEISE.txt', data: new TextEncoder().encode('Portrait Studio: Referenzfotos\nZIP entpacken und die JPG-Dateien selbst im gewaehlten KI-Chat anhaengen. Bildprompt separat exportieren. Erst im KI-Chat ausdruecklich die Bilderzeugung freigeben. Kein automatischer Upload.\n') });
+      const url = URL.createObjectURL(new Blob([makeZip(files)], { type: 'application/zip' }));
+      const a = document.createElement('a'); a.href = url; a.download = 'portrait-studio-referenzfotos.zip'; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60_000); status('ZIP-Download gestartet. Entpacke die Datei vor dem Hochladen im KI-Chat.');
+    } catch (_) { status('ZIP konnte nicht erstellt werden. Lade die Fotos bitte einzeln herunter.'); }
+    finally { busy = false; controls(); }
+  };
+  $('clear').onclick = () => { photos.forEach(p => URL.revokeObjectURL(p.url)); photos = []; renderPhotos(); status('Alle Aufnahmen aus dieser Browseransicht entfernt. Heruntergeladene Dateien bleiben auf deinem Gerät.'); };
+  $('consent').onchange = () => { if (!$('consent').checked) stopCamera('Kamera ausgeschaltet. Vorhandene Aufnahmen kannst du herunterladen oder löschen.'); controls(); };
+  $('start').onclick = startCamera; $('stop').onclick = () => stopCamera('Kamera ausgeschaltet. Deine Aufnahmen sind noch da.');
+  $('pose').onchange = () => { $('poseHint').textContent = POSES[$('pose').value].hint; };
+  $('pose').onchange();
+  $('facing').onchange = () => { if (stream || starting) stopCamera('Kameraauswahl geändert. Bitte starte die gewünschte Kamera erneut.'); };
+  $('mirror').onchange = () => video.classList.toggle('mirrored', $('mirror').checked);
+  document.addEventListener('visibilitychange', () => { if (document.hidden && (stream || starting)) stopCamera('Kamera beim Verlassen des Tabs ausgeschaltet. Starte sie bei Bedarf erneut.'); });
+  window.addEventListener('pagehide', () => stopCamera());
+  window.addEventListener('beforeunload', () => { stopCamera(); photos.forEach(p => URL.revokeObjectURL(p.url)); photos = []; });
+  controls();
+})();
+</script></body></html>
