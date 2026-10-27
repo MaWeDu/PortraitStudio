@@ -1,6 +1,7 @@
 """Portrait Studio: text-only configuration with explicit export approval."""
 import os
 from portrait_visual import REFERENCE_IMAGE
+from camera_section import render_camera
 import time
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
@@ -126,22 +127,21 @@ with st.container(key='studio_shell'):
     <h2>Dein professionelles Profilfoto.</h2>
     <p>Für Bewerbungen, LinkedIn und berufliche Profile. Individuell konfiguriert, mit Fokus auf deine natürliche Wiedererkennbarkeit.</p>
     <div class="ps-grid">
-    <a class="ps-tile" href="#referenzfotos"><span class="ps-icon">▧</span><strong>Referenzfotos vorbereiten</strong><small>Eigene Bilder später im Bild-KI-Chat</small></a>
+    <a class="ps-tile" href="#referenzfotos"><span class="ps-icon">▧</span><strong>Fotos aufnehmen</strong><small>Mit Gesichtsrahmen und Lichttipps</small></a>
     <a class="ps-tile" href="#deine-einstellungen"><span class="ps-icon">☷</span><strong>11 Einstellungen</strong><small>Individuelle Auswahl</small></a>
     <a class="ps-tile" href="#deine-einstellungen"><span class="ps-icon">⌗</span><strong>Identität bewahren</strong><small>Gesichtstreue priorisieren</small></a>
     <a class="ps-tile" href="#deine-einstellungen"><span class="ps-icon">↓</span><strong>Bildprompt erhalten</strong><small>Geprüften Text herunterladen</small></a>
     </div>
-    <div class="ps-control"><strong><span>♧</span>Kontrollierte Bilderzeugung</strong><p>Keine Bilderzeugung ohne ausdrückliche Freigabe. Hier bereitest du nur den Prompt vor; Fotos bleiben außerhalb dieser App.</p></div>
+    <div class="ps-control"><strong><span>♧</span>Kontrollierte Bilderzeugung</strong><p>Keine Bilderzeugung ohne ausdrückliche Freigabe. Du entscheidest über deine Fotos und deinen Prompt. Keine automatische Weitergabe an KI-Dienste.</p></div>
     </section>""", unsafe_allow_html=True)
     st.markdown('<div id="referenzfotos"></div>', unsafe_allow_html=True)
-    with st.expander('So bereitest du deine Referenzfotos vor'):
-        st.write('Wähle gut erkennbare eigene Fotos mit verschiedenen Blickwinkeln und natürlichem Licht. Lade sie erst später direkt im Bild-KI-Chat hoch. Diese App nimmt keine Foto-Uploads entgegen.')
+    render_camera()
     st.markdown('<h2 id="deine-einstellungen" class="ps-config-title">Deine 11 Einstellungen</h2>', unsafe_allow_html=True)
     st.button('Sitzungsdaten löschen und abmelden', on_click=clear_session)
     with st.expander('Datenschutz: Was passiert mit deinen Angaben?'):
-        st.write('Deine Texte werden zur Verarbeitung an den Streamlit-Server übertragen und im Sitzungsspeicher gehalten. Diese App schreibt sie nicht in Dateien, Datenbanken oder eigene Protokolle. Ein Foto-Upload ist bewusst nicht enthalten. Namen, Kontaktdaten oder andere vertrauliche Angaben sind für den Prompt nicht nötig.')
+        st.write('Deine Texte werden zur Verarbeitung an den Streamlit-Server übertragen und im Sitzungsspeicher gehalten. Diese App schreibt sie nicht in Dateien, Datenbanken oder eigene Protokolle. Die optionale Kameraansicht verarbeitet Fotos ausschließlich im Browser und lädt sie nicht zum Server hoch. Die Kamera benötigt deine Browserfreigabe. Namen, Kontaktdaten oder andere vertrauliche Angaben sind für den Prompt nicht nötig.')
         st.write('Die Schaltfläche zum Abmelden entfernt die von dieser App verwalteten Sitzungsdaten. Bereits heruntergeladene Dateien bleiben auf deinem Gerät. Eine sofortige vollständige Löschung aus Browser-, Infrastruktur- oder Serverspeicher wird nicht zugesichert. Bei Inaktivität wird die Anmeldung beim nächsten Zugriff nach 30 Minuten verworfen.')
-        st.write('Referenzfotos erst später im von dir gewählten Bilddienst hochladen. Dessen Bedingungen und Datenschutzhinweise gelten dort gesondert. Nutze nur Fotos mit den erforderlichen Rechten und Einwilligungen. Betreiber- und Hosting-Angaben stehen unten, sofern konfiguriert.')
+        st.write('Lade aufgenommene Referenzfotos zuerst auf dein Gerät herunter und anschließend selbst im von dir gewählten Bilddienst hoch. Dessen Bedingungen und Datenschutzhinweise gelten dort gesondert. Nutze nur Fotos mit den erforderlichen Rechten und Einwilligungen. Betreiber- und Hosting-Angaben stehen unten, sofern konfiguriert.')
         st.caption('Der Passwortzugang ist ein geteilter Zugang ohne Benutzerkonten. Für öffentlich erreichbare Apps zusätzlich die Zugriffsverwaltung des Hosters nutzen.')
 
     answers = {}
