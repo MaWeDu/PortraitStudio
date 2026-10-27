@@ -2,6 +2,7 @@
 import os
 from portrait_visual import REFERENCE_IMAGE
 from camera_section import render_camera
+from job_presets import JOB_PRESETS, preset_answers, option_label
 import time
 import streamlit as st
 from streamlit.errors import StreamlitSecretNotFoundError
@@ -62,6 +63,17 @@ def config_changed():
     revoke()
     for key in ('prompt_editor', 'source_digest'):
         st.session_state.pop(key, None)
+
+
+def apply_job():
+    job = st.session_state.get('job_preset')
+    if job not in JOB_PRESETS:
+        return
+    for key, value in preset_answers(job).items():
+        if key not in ('identity', 'notes', 'market'):
+            st.session_state['q_' + key] = value
+    config_changed()
+    st.session_state['applied_job'] = job
 
 
 def clear_session():
@@ -144,12 +156,19 @@ with st.container(key='studio_shell'):
         st.write('Lade aufgenommene Referenzfotos zuerst auf dein Gerät herunter und anschließend selbst im von dir gewählten Bilddienst hoch. Dessen Bedingungen und Datenschutzhinweise gelten dort gesondert. Nutze nur Fotos mit den erforderlichen Rechten und Einwilligungen. Betreiber- und Hosting-Angaben stehen unten, sofern konfiguriert.')
         st.caption('Der Passwortzugang ist ein geteilter Zugang ohne Benutzerkonten. Für öffentlich erreichbare Apps zusätzlich die Zugriffsverwaltung des Hosters nutzen.')
 
+    st.subheader('Mit einer Job-Vorlage starten')
+    st.selectbox('Job oder Berufsfeld', ['Ohne Vorlage / eigener Beruf'] + list(JOB_PRESETS), key='job_preset')
+    st.caption('Wähle eine Vorlage und übernimm sie mit dem Button. Sie setzt die Auswahlfelder und die Berufsangabe neu; individuelle Auswahl-Details werden geleert. Persönliche Merkmale, Bewerbungsmarkt und weitere Wünsche bleiben erhalten. Danach ist alles frei anpassbar. Die Vorschläge sind keine Kleiderregeln; Berufskleidung oder Uniformen werden nicht automatisch ergänzt.')
+    st.button('Job-Vorschlag übernehmen', on_click=apply_job, disabled=st.session_state.get('job_preset') not in JOB_PRESETS)
+    if st.session_state.get('applied_job'):
+        st.caption('Zuletzt übernommene Vorlage: ' + st.session_state['applied_job'] + '. Deine aktuellen Einstellungen darunter gelten für den Prompt.')
+
     answers = {}
     for key, label, options in QUESTIONS:
         with st.container(border=True):
             st.subheader(label)
             if options:
-                answers[key] = st.selectbox('Auswahl', options, key='q_' + key, on_change=config_changed)
+                answers[key] = st.selectbox('Auswahl', options, format_func=option_label, key='q_' + key, on_change=config_changed)
                 answers[key + '_detail'] = st.text_input('Details (bei eigener Vorgabe erforderlich)', key='q_' + key + '_detail', max_chars=400, on_change=config_changed)
             else:
                 help_text = ('Zum Beispiel: Data Analyst im Gesundheitswesen; keine Arbeitgebernamen nötig.' if key == 'context'
@@ -158,9 +177,9 @@ with st.container(key='studio_shell'):
             if key == 'context':
                 answers['market'] = st.text_input('Bewerbungsmarkt (optional)', key='q_market', max_chars=100, on_change=config_changed)
             if key == 'composition':
-                answers['gaze'] = st.selectbox('Blickrichtung', ['Direkt in die Kamera', 'Leicht versetzt', 'Dezent seitlich'], key='q_gaze', on_change=config_changed)
+                answers['gaze'] = st.selectbox('Blickrichtung', ['Direkt in die Kamera', 'Leicht versetzt', 'Dezent seitlich'], format_func=option_label, key='q_gaze', on_change=config_changed)
             if key == 'variants':
-                answers['formats'] = st.selectbox('Ausgabeformate', ['4:5 und 1:1', '4:5', '3:4', '1:1'], key='q_formats', on_change=config_changed)
+                answers['formats'] = st.selectbox('Ausgabeformate', ['4:5 und 1:1', '4:5', '3:4', '1:1'], format_func=option_label, key='q_formats', on_change=config_changed)
     answers['notes'] = st.text_area('Weitere Wünsche (optional)', key='q_notes', max_chars=1200, on_change=config_changed)
 
     if st.button('Prompt-Vorschau erstellen', type='primary'):
