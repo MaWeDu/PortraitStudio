@@ -176,6 +176,16 @@ with st.container(key='studio_shell'):
                 answers[key] = st.text_input('Deine Angaben (optional)', help=help_text, key='q_' + key, max_chars=400, on_change=config_changed)
             if key == 'context':
                 answers['market'] = st.text_input('Bewerbungsmarkt (optional)', key='q_market', max_chars=100, on_change=config_changed)
+            if key == 'identity':
+                answers['gender'] = st.selectbox(
+                    'Geschlecht (optional)', ['Männlich', 'Weiblich', 'Neutral'],
+                    index=None, placeholder='Bei Bedarf auswählen', key='q_gender',
+                    format_func=lambda value: value + {
+                        'Männlich': ' (männliche Selbstbeschreibung)',
+                        'Weiblich': ' (weibliche Selbstbeschreibung)',
+                        'Neutral': ' (ohne geschlechtsspezifische Vorgaben)',
+                    }[value], on_change=config_changed)
+                st.caption('Deine freiwillige Angabe wird in den Prompt übernommen. Gesichtszüge und Identität bleiben erhalten. Job-Vorlagen verändern diese Auswahl nicht.')
             if key == 'composition':
                 answers['gaze'] = st.selectbox('Blickrichtung', ['Direkt in die Kamera', 'Leicht versetzt', 'Dezent seitlich'], format_func=option_label, key='q_gaze', on_change=config_changed)
             if key == 'variants':
