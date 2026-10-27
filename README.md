@@ -1,3 +1,9 @@
+## Neu: Fotos direkt im Browser aufnehmen
+
+Unter **Fotos aufnehmen → Kamerabereich öffnen** gibt es jetzt Kameraaufnahme mit Gesichtsrahmen, Ausrichtungs- und Lichttipps, drei Blickrichtungen, Selbstauslöser sowie JPG- und ZIP-Download. Die Fotos bleiben in der Kameraansicht im Browser und werden nicht zum Streamlit-Server oder zu einem KI-Dienst übertragen. Erst selbst herunterladen und anschließend im gewünschten KI-Chat hochladen. Keine integrierte Bilderzeugung und kein API-Schlüssel nötig.
+
+Bedienung, Datenschutz und Testgrenzen: [KAMERA.md](KAMERA.md). Die ältere Dokumentation darunter beschreibt den früheren Stand ohne Kameraansicht.
+
 # Portrait Studio 2.0
 
 Private Streamlit-App zur Vorbereitung von Bewerbungs- und LinkedIn-Porträts.
