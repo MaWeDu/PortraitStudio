@@ -50,6 +50,9 @@ def build_prompt(answers):
     return '\n\n'.join(lines) + f'''
 
 ERGÄNZUNGEN
+Geschlecht (freiwillige Selbstangabe): {answers.get('gender') or 'Nicht angegeben'}
+Die Geschlechtsangabe verändert keine Gesichtszüge oder persönlichen Merkmale.
+Bei Neutral keine geschlechtsspezifischen Vorgaben für Kleidung oder Styling ergänzen.
 Bewerbungsmarkt: {answers.get('market', '').strip() or 'Nicht festgelegt'}
 Blickrichtung: {answers.get('gaze', 'Direkt in die Kamera')}
 Formate: {answers.get('formats', '4:5 und 1:1')}
